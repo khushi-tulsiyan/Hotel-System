@@ -1,5 +1,5 @@
-from flask import Flask, Response
-import cv2
+from flask import Flask, Response # type: ignore
+import cv2 # type: ignore
 
 app = Flask(__name__)
 
