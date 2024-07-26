@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import socketIOClient from 'socket.io-client';
+import axios from 'axios';
 import { Container, Row, Col, Tab, Nav } from "react-bootstrap";
 import { ProjectCard } from "./components/ProjectCard";
-import axios from 'axios';
-import socketIOClient from 'socket.io-client';
 
 const ENDPOINT = "http://127.0.0.1:5000";
 
@@ -15,13 +15,13 @@ const App = () => {
       setProjects(response.data);
     };
     fetchProjects();
-  }, []);
 
-  useEffect(() => {
     const socket = socketIOClient(ENDPOINT);
-    socket.on("FromAPI", data => {
-      console.log("Real-time data:", data);
+    socket.on("roomUpdate", data => {
+      setProjects(prevProjects => [...prevProjects, data]);
     });
+
+    return () => socket.disconnect();
   }, []);
 
   return (

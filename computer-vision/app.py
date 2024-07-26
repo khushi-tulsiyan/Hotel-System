@@ -1,24 +1,43 @@
-from flask import Flask, Response # type: ignore
-import cv2 # type: ignore
+import cv2
+import time
+import socketio
 
-app = Flask(__name__)
+# Connect to the backend
+sio = socketio.Client()
+sio.connect('http://127.0.0.1:5000')
 
-def generate_frames():
-    camera = cv2.VideoCapture(0)
+def process_frame(frame):
+    # Your CV processing code here (e.g., object detection, face recognition)
+    return frame
 
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-        else:
-            ret , buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield(b'--frame\r\n'
-            b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+# Initialize video capture
+cap = cv2.VideoCapture(0)
+frame_rate = 10  # Process 10 frames per second
+prev = 0
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+while True:
+    time_elapsed = time.time() - prev
+    ret, frame = cap.read()
+    
+    if time_elapsed > 1./frame_rate:
+        prev = time.time()
 
-if __name__ == '__main__':
-    app.run(debug=True)
+        # Reduce resolution
+        frame = cv2.resize(frame, (640, 480))
+        
+        # Process the frame
+        processed_frame = process_frame(frame)
+
+        # Send processed data to the backend
+        # For example, if the CV algorithm detects a change in room status
+        sio.emit('roomUpdate', {'roomNumber': 101, 'status': 'Occupied'})
+
+        # Display the frame
+        cv2.imshow('Frame', processed_frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+sio.disconnect()

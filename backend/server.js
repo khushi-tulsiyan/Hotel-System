@@ -1,27 +1,28 @@
 const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const socketIo = require('socket.io');
-const http = require('http');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/hotel-management', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://localhost:27017/hotel-management', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-// Load routes
-const roomRoutes = require('./routes/rooms');
-app.use('/api/rooms', roomRoutes);
+const Room = require('./models/Room');
 
-// WebSocket connection
+app.use('/api/rooms', require('./routes/rooms')(io));
+
 io.on('connection', (socket) => {
   console.log('New client connected');
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
