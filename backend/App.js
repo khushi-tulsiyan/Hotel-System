@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import socketIOClient from 'socket.io-client';
 import axios from 'axios';
 import { Container, Row, Col, Tab, Nav } from "react-bootstrap";
-import { ProjectCard } from "./components/ProjectCard";
+import { ProjectCard } from "../frontend/src/components/ProjectCard";
 
 const ENDPOINT = "http://127.0.0.1:5000";
 
