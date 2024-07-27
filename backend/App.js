@@ -1,57 +1,111 @@
-import React, { useEffect, useState } from 'react';
-import socketIOClient from 'socket.io-client';
-import axios from 'axios';
-import { Container, Row, Col, Tab, Nav } from "react-bootstrap";
-import { ProjectCard } from "../frontend/src/components/ProjectCard";
+const mysql = require('mysql');
+const express = require('express');
+const multer = require('multer')
+const path = require('path')
+var app = express()
+var cors = require('cors')
+const session = require('express-session');
+var MySQLStore = require('express-mysql-session')(session);
+const helmet = require("helmet");
+const auth = require("./auth");
 
-const ENDPOINT = "http://127.0.0.1:5000";
-
-const App = () => {
-  const [projects, setProjects] = useState([]);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const response = await axios.get(`${ENDPOINT}/api/rooms`);
-      setProjects(response.data);
-    };
-    fetchProjects();
-
-    const socket = socketIOClient(ENDPOINT);
-    socket.on("roomUpdate", data => {
-      setProjects(prevProjects => [...prevProjects, data]);
-    });
-
-    return () => socket.disconnect();
-  }, []);
-
-  return (
-    <Container>
-      <Row>
-        <Col size={12}>
-          <h3>A few things that I made :)</h3>
-          <Tab.Container id="projects-tabs" defaultActiveKey="first">
-            <Nav variant="pills" className="nav-pills mb-5 justify-content-center align-items-center" id="pills-tab">
-              <Nav.Item>
-                <Nav.Link eventKey="first">Try em out!</Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link eventKey="second">Why me?</Nav.Link>
-              </Nav.Item>
-            </Nav>
-            <Tab.Content>
-              <Tab.Pane eventKey="first">
-                <Row>
-                  {projects.map((project, index) => (
-                    <ProjectCard key={index} {...project} />
-                  ))}
-                </Row>
-              </Tab.Pane>
-            </Tab.Content>
-          </Tab.Container>
-        </Col>
-      </Row>
-    </Container>
-  );
+app.use(helmet());
+var options = {
+	host: 'localhost',
+	port: 3306,
+	user: 'root',
+	password: '',
+	database: 'hotelmanagement',
+    schema: {
+		tableName: 'custom_sessions_table_name',
+		columnNames: {
+			session_id: 'custom_session_id',
+			expires: 'custom_expires_column_name',
+			data: 'custom_data_column_name'
+		}
+	}
 };
 
-export default App;
+
+var sessionStore = new MySQLStore(options);
+
+app.use(session({
+	key: 'session_cookie_name',
+	secret: 'session_cookie_secret',
+	store: sessionStore,
+	resave: false,
+	saveUninitialized: false
+}));
+
+const bodyParser = require('body-parser');
+app.use(bodyParser.json())
+app.use(cors())
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+  });
+
+
+
+var  mysqlConnection = mysql.createConnection({
+    host: "localhost",
+
+	user: "root",
+	password: "",
+	database: "hotelmanagement",
+
+});
+
+mysqlConnection.connect((err)=>{
+   if(!err){
+       console.log("SUccessfully connected to database ...!!");
+   }
+   else{
+       console.log(err);
+   }
+});
+
+
+
+const storage = multer.diskStorage({
+    destination: './upload/images',
+    filename: (req, file, cb) => {
+        return cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`)
+    }
+})
+
+const upload = multer({
+    storage: storage,
+})
+
+
+app.use('/profile', express.static('upload/images'));
+
+app.use((req,res,next)=>{
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+})
+
+app.post("/upload", upload.single('profile'),(req,res)=>{
+   res.json({
+       success:1,
+       profile_url: `http://localhost:8000/profile/${req.file.filename}`
+   })
+})
+
+const customer = require("./routers/Customer");
+const Admin = require("./routers/Admin");
+
+
+app.use(customer);
+app.use(Admin);
+
+
+app.listen(8000,()=>{console.log("expresss server is running at port nnumber 3000")})
+
+
+
+
+
