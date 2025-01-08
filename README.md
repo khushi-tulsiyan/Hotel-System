@@ -5,14 +5,14 @@ This project is part of the Course of Web & Hybrid development which is taken at
 
 ## Demo of Admin Panel
 
-https://hotel-admin-by-nabia.netlify.app/
+https://hotel-syatem-omega.netlify.app/
 
 ## Email : admin@gmail.com
 ## Password : adminadmin
 
 ## Demo of Site
 
-https://hotel-management-by-nabia.netlify.app/
+https://hotel-system-omega.netlify.app/
 
 
 
@@ -38,13 +38,13 @@ https://hotel-management-by-nabia.netlify.app/
 Clone the project
 
 ```bash
-  git clone https://github.com/Nabia-Sheikh/hotel-management-admin.git
+  git clone https://github.com/Khushi-Tulsiyan/hotel-system.git
 ```
 
 Go to the project directory
 
 ```bash
-  cd hotel-management-system
+  cd hotel-system
 ```
 
 Install dependencies
